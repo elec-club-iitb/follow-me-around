@@ -1,11 +1,21 @@
 import cv2
 import numpy as np
 from time import time
+import serial
+from serial.tools.list_ports import comports
 
-camera = cv2.VideoCapture(1)
+camera = cv2.VideoCapture(0)
 frames = []
 center = (0, 0)
 centers = []
+
+ports = comports()
+arduino_port  = ""
+for p in ports:
+    print p[1]
+    if "Arduino" in p.manufacturer:
+        arduino_port = p[0];
+arduino = serial.Serial(arduino_port)
 
 while True:
     t = time()
@@ -52,9 +62,17 @@ while True:
         cv2.circle(im2, c, 20, [0,0,0])
     cv2.imshow("Test frame", im2)
 
+    if center != (0,0):
+        w, h, _ = im.shape
+        delta_theta = center[0] - w/2
+        delta_theta *= 120.0 / w
+        print delta_theta
+        arduino.write(str(delta_theta).encode('ascii'))
+
+
+
     k = cv2.waitKey(5)
 
     if k & 0xFF == 27:
         break
 
-    print(time() - t)
